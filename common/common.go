@@ -5,10 +5,12 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
+	"time"
 
+	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/proto"
 )
 
 // ContextValue func
@@ -23,6 +25,18 @@ func ContextValue(ctx context.Context, out proto.Message) error {
 		return err
 	}
 	return nil
+}
+func MakeContext(sec int, claims proto.Message) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(sec)*time.Second)
+	if claims != nil {
+		bin, err := json.Marshal(claims)
+		if err != nil {
+			log.Print(err)
+		}
+		ctx = metadata.AppendToOutgoingContext(ctx, "ctx", string(bin))
+		return ctx, cancel
+	}
+	return ctx, cancel
 }
 
 // ToNs convert time to nanosecond
