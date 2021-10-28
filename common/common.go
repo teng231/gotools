@@ -121,3 +121,21 @@ func UniqInt64(intSlice []int64) []int64 {
 	}
 	return list
 }
+
+func MergeStructs(in ...interface{}) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+	temp := make(map[string]interface{})
+	for _, m := range in {
+		bin, err := json.Marshal(m)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(bin, &temp); err != nil {
+			return nil, err
+		}
+		for k, v := range temp {
+			result[k] = v
+		}
+	}
+	return result, nil
+}
