@@ -8,20 +8,15 @@ import (
 	"time"
 )
 
-type Option struct {
+type HttpOption struct {
 	Timeout time.Duration
 }
 
 // SendReqPost send http post
-func SendReqPost(url string, headers map[string]string, body []byte, opts ...Option) (int, []byte, error) {
+func SendReqPost(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		return 0, nil, err
-	}
-	if len(headers) > 0 {
-		for k, val := range headers {
-			req.Header.Set(k, val)
-		}
+	if err != nil {if len(opts) > 0 && opts[0].Timeout != 0 {
+		client.Timeout = opts[0].Timeout
 	}
 	client := &http.Client{Timeout: 10 * time.Second}
 	if len(opts) > 0 && opts[0].Timeout != 0 {
@@ -40,7 +35,7 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Opt
 }
 
 // SendReqPut send http put`
-func SendReqPut(url string, headers map[string]string, body []byte, opts ...Option) (int, []byte, error) {
+func SendReqPut(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("PUT`", url, bytes.NewBuffer(body))
 	if err != nil {
 		return 0, nil, err
@@ -67,7 +62,7 @@ func SendReqPut(url string, headers map[string]string, body []byte, opts ...Opti
 }
 
 // SendReqGet send http get
-func SendReqGet(url string, headers map[string]string, opts ...Option) (int, []byte, error) {
+func SendReqGet(url string, headers map[string]string, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return 0, nil, err
