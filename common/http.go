@@ -15,8 +15,8 @@ type HttpOption struct {
 // SendReqPost send http post
 func SendReqPost(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {if len(opts) > 0 && opts[0].Timeout != 0 {
-		client.Timeout = opts[0].Timeout
+	if err != nil {
+		return 0, nil, err
 	}
 	client := &http.Client{Timeout: 10 * time.Second}
 	if len(opts) > 0 && opts[0].Timeout != 0 {

@@ -2,6 +2,7 @@ package stringfolding
 
 import (
 	"log"
+	"math/rand"
 	"testing"
 )
 
@@ -73,4 +74,35 @@ func Test_Genint(t *testing.T) {
 	for i := 0; i < len(ins); i++ {
 		log.Print(ins[i], ":", Generate(ins[i], 1000000))
 	}
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
+
+func RandStringRunes(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
+}
+
+func TestGenDuplicate(t *testing.T) {
+	m := map[int64]string{}
+	checkDuplicate := map[string]bool{}
+	var item string
+	for i := 0; i < 5e7; i++ {
+		for {
+			x := RandStringRunes(12)
+			if _, has := checkDuplicate[x]; has {
+				log.Print("duplicate")
+				continue
+			}
+			checkDuplicate[x] = true
+			item = x
+			break
+		}
+		num := Generate(item, 1e8)
+		m[num] = item
+	}
+	log.Print(len(m), len(checkDuplicate), float32(len(m))/float32(5e7))
 }
