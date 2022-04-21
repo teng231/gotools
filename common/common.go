@@ -9,8 +9,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/proto"
 )
 
 // ContextValue func
