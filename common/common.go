@@ -26,6 +26,27 @@ func ContextValue(ctx context.Context, out proto.Message) error {
 	}
 	return nil
 }
+
+// ParseContext func is new method replace ContextValue
+// high performance, using smaller resource
+// replace json marshall to proto marshall
+// can support older
+func ParseContext(ctx context.Context, out proto.Message) error {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok || md == nil || md["ctx"] == nil || len(md["ctx"]) == 0 {
+		out = nil
+		return nil
+	}
+	// default parse using proto
+	if err := proto.Unmarshal([]byte(md["ctx"][0]), out); err == nil {
+		return nil
+	}
+	if err := json.Unmarshal([]byte(md["ctx"][0]), out); err != nil {
+		out = nil
+		return err
+	}
+	return nil
+}
 func MakeContext(sec int, claims proto.Message) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(sec)*time.Second)
 	if claims != nil {
