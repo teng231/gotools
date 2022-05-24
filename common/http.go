@@ -18,6 +18,11 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Htt
 	if err != nil {
 		return 0, nil, err
 	}
+	if len(headers) > 0 {
+		for k, val := range headers {
+			req.Header.Set(k, val)
+		}
+	}
 	client := &http.Client{Timeout: 10 * time.Second}
 	if len(opts) > 0 && opts[0].Timeout != 0 {
 		client.Timeout = opts[0].Timeout
@@ -36,7 +41,7 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Htt
 
 // SendReqPut send http put`
 func SendReqPut(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
-	req, err := http.NewRequest("PUT`", url, bytes.NewBuffer(body))
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
 	if err != nil {
 		return 0, nil, err
 	}
