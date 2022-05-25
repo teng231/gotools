@@ -9,12 +9,13 @@ import (
 	"math/rand"
 	"time"
 
+	oldproto "github.com/gogo/protobuf/proto"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 )
 
 // ContextValue func
-func ContextValue(ctx context.Context, out proto.Message) error {
+func ContextValue(ctx context.Context, out oldproto.Message) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok || md == nil || md["ctx"] == nil || len(md["ctx"]) == 0 {
 		out = nil
