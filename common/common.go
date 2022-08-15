@@ -161,3 +161,25 @@ func MergeStructs(in ...interface{}) (map[string]interface{}, error) {
 	}
 	return result, nil
 }
+
+func Chunk(slices []string, chunkSize int) (chunks [][]string) {
+	for chunkSize < len(slices) {
+		slices, chunks = slices[chunkSize:], append(chunks, slices[0:chunkSize:chunkSize])
+	}
+
+	return append(chunks, slices)
+}
+
+func ChunkInt64(slices []int64, chunkSize int) (chunks [][]int64) {
+	for chunkSize < len(slices) {
+		slices, chunks = slices[chunkSize:], append(chunks, slices[0:chunkSize:chunkSize])
+	}
+	return append(chunks, slices)
+}
+
+func ChunkInt32(slices []int32, chunkSize int) (chunks [][]int32) {
+	for chunkSize < len(slices) {
+		slices, chunks = slices[chunkSize:], append(chunks, slices[0:chunkSize:chunkSize])
+	}
+	return append(chunks, slices)
+}
