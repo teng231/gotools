@@ -3,13 +3,23 @@ package common
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
+)
+
+var (
+	E_timeout = errors.New("request_timeout")
 )
 
 type HttpOption struct {
 	Timeout time.Duration
+}
+
+func isTimeout(err error) bool {
+	return strings.Contains(err.Error(), "context deadline exceeded")
 }
 
 // SendReqPost send http post
@@ -29,6 +39,9 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Htt
 	}
 	resp, err := client.Do(req)
 	if err != nil {
+		if isTimeout(err) {
+			return 0, nil, E_timeout
+		}
 		return 0, nil, err
 	}
 	defer func() {
@@ -56,6 +69,9 @@ func SendReqPut(url string, headers map[string]string, body []byte, opts ...Http
 	}
 	resp, err := client.Do(req)
 	if err != nil {
+		if isTimeout(err) {
+			return 0, nil, E_timeout
+		}
 		return 0, nil, err
 	}
 	defer func() {
@@ -84,6 +100,9 @@ func SendReqGet(url string, headers map[string]string, opts ...HttpOption) (int,
 	}
 	resp, err := client.Do(req)
 	if err != nil {
+		if isTimeout(err) {
+			return 0, nil, E_timeout
+		}
 		return 0, nil, err
 	}
 	defer func() {
@@ -139,6 +158,9 @@ func SendReqPostWithRetry(url string, headers map[string]string, body []byte) (i
 	}
 	resp, err := c.Do(req)
 	if err != nil {
+		if isTimeout(err) {
+			return 0, nil, E_timeout
+		}
 		return 0, nil, err
 	}
 	defer func() {

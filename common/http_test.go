@@ -5,8 +5,15 @@ import (
 	"log"
 	"sync"
 	"testing"
+	"time"
 )
 
+func Test_httpRequestwithTimeout(t *testing.T) {
+	code, body, err := SendReqGet("https://apib.urbox.vn/v1/api/user/me", map[string]string{"content-type": "application/json"}, HttpOption{
+		Timeout: time.Millisecond,
+	})
+	log.Print(code, string(body), ":", err)
+}
 func Test_httpSendRetry(t *testing.T) {
 	code, body, err := SendReqPostWithRetry("http://localhost:3000", map[string]string{"content-type": "application/json"}, []byte(""))
 	log.Print(code, string(body), err)
