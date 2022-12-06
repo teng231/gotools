@@ -4,48 +4,97 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
-	"strings"
-
-	"github.com/xdg-go/pbkdf2"
+	"encoding/base64"
+	"errors"
+	"io"
 )
 
-// source here: https://gist.github.com/enyachoke/5c60f5eebed693d9b4bacddcad693b47
+// source here: https://gist.github.com/STGDanny/03acf29a90684c2afc9487152324e832
 
-func deriveKey(passphrase, salt []byte) ([]byte, []byte) {
-	if salt == nil {
-		salt = make([]byte, 8)
-		// http://www.ietf.org/rfc/rfc2898.txt
-		// Salt.
-		rand.Read(salt)
+/*
+ *	FUNCTION		: encrypt
+ *	DESCRIPTION		:
+ *		This function takes a string and a cipher key and uses AES to encrypt the message
+ *
+ *	PARAMETERS		:
+ *		byte[] key	: Byte array containing the cipher key
+ *		string message	: String containing the message to encrypt
+ *
+ *	RETURNS			:
+ *		string encoded	: String containing the encoded user input
+ *		error err	: Error message
+ */
+func AESEncryptToBase64(key []byte, message string) (encoded string, err error) {
+	//Create byte array from the input string
+	plainText := []byte(message)
+
+	//Create a new AES cipher using the key
+	block, err := aes.NewCipher(key)
+
+	//IF NewCipher failed, exit:
+	if err != nil {
+		return
 	}
-	return pbkdf2.Key([]byte(passphrase), salt, 1000, 32, sha256.New), salt
+
+	//Make the cipher text a byte array of size BlockSize + the length of the message
+	cipherText := make([]byte, aes.BlockSize+len(plainText))
+
+	//iv is the ciphertext up to the blocksize (16)
+	iv := cipherText[:aes.BlockSize]
+	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
+		return
+	}
+
+	//Encrypt the data:
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(cipherText[aes.BlockSize:], plainText)
+
+	//Return string encoded in base64
+	return base64.RawStdEncoding.EncodeToString(cipherText), err
 }
 
-func Encrypt(passphrase, plaintext []byte) string {
-	key, salt := deriveKey(passphrase, nil)
-	iv := make([]byte, 12)
-	// http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
-	// Section 8.2
-	rand.Read(iv)
-	b, _ := aes.NewCipher(key)
-	aesgcm, _ := cipher.NewGCM(b)
-	data := aesgcm.Seal(nil, iv, plaintext, nil)
-	return hex.EncodeToString(salt) + "-" + hex.EncodeToString(iv) + "-" + hex.EncodeToString(data)
-}
+/*
+ *	FUNCTION		: decrypt
+ *	DESCRIPTION		:
+ *		This function takes a string and a key and uses AES to decrypt the string into plain text
+ *
+ *	PARAMETERS		:
+ *		byte[] key	: Byte array containing the cipher key
+ *		string secure	: String containing an encrypted message
+ *
+ *	RETURNS			:
+ *		string decoded	: String containing the decrypted equivalent of secure
+ *		error err	: Error message
+ */
+func AESDecryptToBase64(key []byte, secure string) (decoded string, err error) {
+	//Remove base64 encoding:
+	cipherText, err := base64.RawStdEncoding.DecodeString(secure)
 
-func Decrypt(passphrase, ciphertext []byte) []byte {
-	arr := strings.Split(string(ciphertext), "-")
-	if len(arr) < 3 {
-		return ciphertext
+	//IF DecodeString failed, exit:
+	if err != nil {
+		return
 	}
-	salt, _ := hex.DecodeString(arr[0])
-	iv, _ := hex.DecodeString(arr[1])
-	data, _ := hex.DecodeString(arr[2])
-	key, _ := deriveKey(passphrase, salt)
-	b, _ := aes.NewCipher(key)
-	aesgcm, _ := cipher.NewGCM(b)
-	data, _ = aesgcm.Open(nil, iv, data, nil)
-	return data
+
+	//Create a new AES cipher with the key and encrypted message
+	block, err := aes.NewCipher(key)
+
+	//IF NewCipher failed, exit:
+	if err != nil {
+		return
+	}
+
+	//IF the length of the cipherText is less than 16 Bytes:
+	if len(cipherText) < aes.BlockSize {
+		err = errors.New("Ciphertext block size is too short!")
+		return
+	}
+
+	iv := cipherText[:aes.BlockSize]
+	cipherText = cipherText[aes.BlockSize:]
+
+	//Decrypt the message
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(cipherText, cipherText)
+
+	return string(cipherText), err
 }

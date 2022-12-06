@@ -2,9 +2,10 @@ package common
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -48,7 +49,16 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Htt
 		req.Close = true
 		resp.Body.Close()
 	}()
-	body, _ = ioutil.ReadAll(resp.Body)
+	var reader io.ReadCloser
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, _ = gzip.NewReader(resp.Body)
+		defer reader.Close()
+	default:
+		reader = resp.Body
+	}
+
+	body, _ = io.ReadAll(reader)
 	return resp.StatusCode, body, nil
 }
 
@@ -78,7 +88,15 @@ func SendReqPut(url string, headers map[string]string, body []byte, opts ...Http
 		req.Close = true
 		resp.Body.Close()
 	}()
-	body, _ = ioutil.ReadAll(resp.Body)
+	var reader io.ReadCloser
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, _ = gzip.NewReader(resp.Body)
+		defer reader.Close()
+	default:
+		reader = resp.Body
+	}
+	body, _ = io.ReadAll(reader)
 	return resp.StatusCode, body, nil
 }
 
@@ -109,7 +127,15 @@ func SendReqGet(url string, headers map[string]string, opts ...HttpOption) (int,
 		req.Close = true
 		resp.Body.Close()
 	}()
-	body, _ := ioutil.ReadAll(resp.Body)
+	var reader io.ReadCloser
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, _ = gzip.NewReader(resp.Body)
+		defer reader.Close()
+	default:
+		reader = resp.Body
+	}
+	body, _ := io.ReadAll(reader)
 	return resp.StatusCode, body, nil
 }
 
@@ -167,6 +193,14 @@ func SendReqPostWithRetry(url string, headers map[string]string, body []byte) (i
 		req.Close = true
 		resp.Body.Close()
 	}()
-	body, _ = ioutil.ReadAll(resp.Body)
+	var reader io.ReadCloser
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, _ = gzip.NewReader(resp.Body)
+		defer reader.Close()
+	default:
+		reader = resp.Body
+	}
+	body, _ = io.ReadAll(reader)
 	return resp.StatusCode, body, nil
 }

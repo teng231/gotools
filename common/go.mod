@@ -1,6 +1,6 @@
 module github.com/teng231/gotools/common
 
-go 1.17
+go 1.18
 
 require (
 	github.com/gogo/protobuf v1.3.2
