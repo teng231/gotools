@@ -80,7 +80,10 @@ func setCellByFormat(f *excelize.File, sheet, axis string, x interface{}) {
 func ExcelWriter(sheet string, headers []string, rows [][]interface{}, fileout string) error {
 	f := excelize.NewFile()
 	// Create a new worksheet.
-	idx := f.NewSheet(sheet)
+	idx, err := f.NewSheet(sheet)
+	if err != nil {
+		return err
+	}
 	if len(headers) > 0 {
 		// default i = 1
 		for i, axis := range axisX[0:len(headers)] {
