@@ -30,7 +30,7 @@ func TestCreateZipWithPasswordFromFile(t *testing.T) {
 }
 
 func TestCreateZipWithPasswordFromFolder(t *testing.T) {
-	err := CreateZipWithPasswordFromFolder("123456", "common.zip", ".vscode")
+	err := CreateZipWithPasswordFromFolder("UrBox@2023", "common.zip", "folder")
 	if err != nil {
 		log.Print(err)
 	}

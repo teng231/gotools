@@ -26,6 +26,7 @@ func isTimeout(err error) bool {
 // SendReqPost send http post
 func SendReqPost(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req.Close = true
 	if err != nil {
 		return 0, nil, err
 	}
@@ -65,6 +66,7 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Htt
 // SendReqPut send http put`
 func SendReqPut(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+	req.Close = true
 	if err != nil {
 		return 0, nil, err
 	}
@@ -103,6 +105,7 @@ func SendReqPut(url string, headers map[string]string, body []byte, opts ...Http
 // SendReqGet send http get
 func SendReqGet(url string, headers map[string]string, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
+	req.Close = true
 	if err != nil {
 		return 0, nil, err
 	}
@@ -165,11 +168,14 @@ func (r *Retry) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // SendReqPostWithRetry send http post
-func SendReqPostWithRetry(url string, headers map[string]string, body []byte) (int, []byte, error) {
+func SendReqPostWithRetry(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
 	c := &http.Client{
 		Transport: &Retry{http.DefaultTransport},
+		Timeout:   10 * time.Second,
 	}
-
+	if len(opts) > 0 && opts[0].Timeout != 0 {
+		c.Timeout = opts[0].Timeout
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 11*time.Second)
 	defer cancel()
 
