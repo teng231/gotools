@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
 	"testing"
@@ -56,4 +57,14 @@ func TestSendMultipleRequestPost(t *testing.T) {
 		wg.Add(1)
 	}
 	wg.Wait()
+}
+
+func TestSendGetBenchmark(t *testing.T) {
+	for i := 1; i < 100; i++ {
+		code, body, err := SendReqGet(fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%d", i), map[string]string{"content-type": "application/json"})
+
+		log.Print(code, string(body), err)
+		time.Sleep(10 * time.Millisecond)
+	}
+	time.Sleep(10 * time.Second)
 }

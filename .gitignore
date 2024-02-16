@@ -3,3 +3,4 @@
 *.zip
 *.xlsx
 *.xls
+.DS_Store
