@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -26,7 +25,7 @@ func isTimeout(err error) bool {
 	return strings.Contains(err.Error(), "context deadline exceeded")
 }
 
-// Send send http post
+// New send request http
 func New(url string, opts ...Option) (int, []byte, error) {
 	newReq, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -61,7 +60,6 @@ func New(url string, opts ...Option) (int, []byte, error) {
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		log.Print(err)
 		return resp.StatusCode, data, err
 	}
 	return resp.StatusCode, data, nil

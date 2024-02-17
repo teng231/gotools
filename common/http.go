@@ -23,7 +23,18 @@ func isTimeout(err error) bool {
 	return strings.Contains(err.Error(), "context deadline exceeded")
 }
 
-// SendReqPost send http post
+// Depredicated: SendReqPost send http post
+/* move to example
+code, body, err := httpclient.New(url).WithMethod("POST").WithHeader(map[string]string{
+	"content-type": "application/json",
+}),
+WithTimeout(time.Second),
+WithBody(map[string]any{
+	"userId": 1,
+	"id":     1,
+	"title":  "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+}))
+*/
 func SendReqPost(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	req.Close = true
@@ -63,7 +74,23 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Htt
 	return resp.StatusCode, body, nil
 }
 
-// SendReqPut send http put`
+// Depredicated: SendReqPut send http put`
+
+/*
+move to example
+
+	code, body, err := httpclient.New(url).WithMethod("PUT").WithHeader(map[string]string{
+		"content-type": "application/json",
+	}),
+
+WithTimeout(time.Second),
+
+	WithBody(map[string]any{
+		"userId": 1,
+		"id":     1,
+		"title":  "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+	}))
+*/
 func SendReqPut(url string, headers map[string]string, body []byte, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
 	req.Close = true
@@ -102,7 +129,17 @@ func SendReqPut(url string, headers map[string]string, body []byte, opts ...Http
 	return resp.StatusCode, body, nil
 }
 
-// SendReqGet send http get
+// Depredicated: SendReqGet send http get`
+
+/*
+move to example
+
+	code, body, err := httpclient.New(url).WithMethod("GET").WithHeader(map[string]string{
+		"content-type": "application/json",
+	}),
+
+WithTimeout(time.Second)
+*/
 func SendReqGet(url string, headers map[string]string, opts ...HttpOption) (int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	req.Close = true
