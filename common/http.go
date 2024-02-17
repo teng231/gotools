@@ -23,7 +23,7 @@ func isTimeout(err error) bool {
 	return strings.Contains(err.Error(), "context deadline exceeded")
 }
 
-// Depredicated: SendReqPost send http post
+// Deprecated: SendReqPost send http post
 /* move to example
 code, body, err := httpclient.New(url).WithMethod("POST").WithHeader(map[string]string{
 	"content-type": "application/json",
@@ -74,7 +74,7 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Htt
 	return resp.StatusCode, body, nil
 }
 
-// Depredicated: SendReqPut send http put`
+// Deprecated: SendReqPut send http put`
 
 /*
 move to example
@@ -129,7 +129,7 @@ func SendReqPut(url string, headers map[string]string, body []byte, opts ...Http
 	return resp.StatusCode, body, nil
 }
 
-// Depredicated: SendReqGet send http get`
+// Deprecated: SendReqGet send http get`
 
 /*
 move to example
