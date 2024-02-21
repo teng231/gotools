@@ -181,7 +181,7 @@ func (t *retryableTransport) RoundTrip(req *http.Request) (*http.Response, error
 	return resp, err
 }
 
-func WithRetriable(retryCount int) Option {
+func WithRetries(retryCount int) Option {
 	return func(r *Req) {
 		transport := &retryableTransport{
 			transport:  &http.Transport{},

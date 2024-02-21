@@ -64,7 +64,7 @@ func TestSendReqWithRetry(t *testing.T) {
 		WithHeader(map[string]string{
 			"content-type": "application/json",
 		}),
-		WithRetriable(3),
+		WithRetries(3),
 	)
 
 	log.Print(code, string(body), err)
