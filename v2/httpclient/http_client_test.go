@@ -41,3 +41,31 @@ func TestSendGetBenchmark(t *testing.T) {
 	}
 	time.Sleep(10 * time.Second)
 }
+
+func TestSendReqWithPerformace(t *testing.T) {
+	code, body, err := New("https://jsonplaceholder.typicode.com/todos/1",
+		WithMethod("GET"),
+		WithTimeout(20*time.Second),
+		WithBasicAuth("te", "manh"),
+		WithHeader(map[string]string{
+			"content-type": "application/json",
+		}),
+		WithTransport(100, 100, 100),
+	)
+
+	log.Print(code, string(body), err)
+}
+
+func TestSendReqWithRetry(t *testing.T) {
+	code, body, err := New("http://localhost:8080/502",
+		WithMethod("GET"),
+		WithTimeout(20*time.Second),
+		WithBasicAuth("te", "manh"),
+		WithHeader(map[string]string{
+			"content-type": "application/json",
+		}),
+		WithRetriable(3),
+	)
+
+	log.Print(code, string(body), err)
+}

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -13,7 +15,8 @@ import (
 
 type Req struct {
 	*http.Request
-	timeout time.Duration
+	timeout   time.Duration
+	transport http.RoundTripper
 }
 type Option func(*Req)
 
@@ -37,7 +40,14 @@ func New(url string, opts ...Option) (int, []byte, error) {
 	for _, opt := range opts {
 		opt(req)
 	}
-	client := &http.Client{Timeout: req.timeout}
+	if req.transport == nil {
+		t := http.DefaultTransport.(*http.Transport).Clone()
+		t.MaxIdleConns = 100
+		t.MaxConnsPerHost = 100
+		t.MaxIdleConnsPerHost = 100
+		req.transport = t
+	}
+	client := &http.Client{Timeout: req.timeout, Transport: req.transport}
 	resp, err := client.Do(req.Request)
 	if err != nil {
 		if isTimeout(err) {
@@ -101,4 +111,83 @@ func WithBasicAuth(username, password string) Option {
 	return func(r *Req) {
 		r.SetBasicAuth(username, password)
 	}
+}
+
+func WithTransport(MaxIdleConns, MaxConnsPerHost, MaxIdleConnsPerHost int) Option {
+	return func(r *Req) {
+		t := http.DefaultTransport.(*http.Transport).Clone()
+		t.MaxIdleConns = MaxIdleConns
+		t.MaxConnsPerHost = MaxConnsPerHost
+		t.MaxIdleConnsPerHost = MaxIdleConnsPerHost
+		r.transport = t
+	}
+}
+
+type retryableTransport struct {
+	transport  http.RoundTripper
+	retryCount int
+}
+
+func shouldRetry(err error, resp *http.Response) bool {
+	if err != nil {
+		return true
+	}
+
+	if resp.StatusCode == http.StatusBadGateway ||
+		resp.StatusCode == http.StatusServiceUnavailable ||
+		resp.StatusCode == http.StatusGatewayTimeout {
+		return true
+	}
+	return false
+}
+func drainBody(resp *http.Response) {
+	if resp.Body != nil {
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+	}
+}
+func backoff(retries int) time.Duration {
+	return time.Duration(math.Pow(2, float64(retries))) * time.Second
+}
+
+// const RetryCount = 3
+
+func (t *retryableTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Clone the request body
+	var bodyBytes []byte
+	if req.Body != nil {
+		bodyBytes, _ = io.ReadAll(req.Body)
+		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	}
+	// Send the request
+	resp, err := t.transport.RoundTrip(req)
+	// Retry logic
+	retries := 0
+	for shouldRetry(err, resp) && retries < t.retryCount {
+		log.Print("RUN Retry")
+		// Wait for the specified backoff period
+		time.Sleep(backoff(retries))
+		// We're going to retry, consume any response to reuse the connection.
+		drainBody(resp)
+		// Clone the request body again
+		if req.Body != nil {
+			req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		}
+		// Retry the request
+		resp, err = t.transport.RoundTrip(req)
+		retries++
+	}
+	// Return the response
+	return resp, err
+}
+
+func WithRetriable(retryCount int) Option {
+	return func(r *Req) {
+		transport := &retryableTransport{
+			transport:  &http.Transport{},
+			retryCount: retryCount,
+		}
+		r.transport = transport
+	}
+
 }

@@ -74,8 +74,7 @@ func SendReqPost(url string, headers map[string]string, body []byte, opts ...Htt
 	return resp.StatusCode, body, nil
 }
 
-// Deprecated: SendReqPut send http put`
-
+// Deprecated: SendReqPut send http put
 /*
 move to example
 
@@ -129,8 +128,7 @@ func SendReqPut(url string, headers map[string]string, body []byte, opts ...Http
 	return resp.StatusCode, body, nil
 }
 
-// Deprecated: SendReqGet send http get`
-
+// Deprecated: SendReqGet send http get
 /*
 move to example
 
