@@ -57,7 +57,7 @@ func TestSendReqWithPerformace(t *testing.T) {
 }
 
 func TestSendReqWithRetry(t *testing.T) {
-	code, body, err := New("http://localhost:8080/502",
+	code, body, err := New("https://dummyjson.com/http/503",
 		WithMethod("GET"),
 		WithTimeout(20*time.Second),
 		WithBasicAuth("te", "manh"),
@@ -65,6 +65,20 @@ func TestSendReqWithRetry(t *testing.T) {
 			"content-type": "application/json",
 		}),
 		WithRetries(3),
+	)
+
+	log.Print(code, string(body), err)
+}
+
+func TestSendReqWithTimeout(t *testing.T) {
+	code, body, err := New("https://dummyjson.com/products/1?delay=5000",
+		WithMethod("GET"),
+		WithTimeout(4*time.Second),
+		// WithBasicAuth("te", "manh"),
+		WithHeader(map[string]string{
+			"content-type": "application/json",
+		}),
+		// WithRetries(3),
 	)
 
 	log.Print(code, string(body), err)
