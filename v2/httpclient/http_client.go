@@ -142,7 +142,7 @@ func shouldRetry(err error, resp *http.Response) bool {
 	return false
 }
 func drainBody(resp *http.Response) {
-	if resp.Body != nil {
+	if resp != nil && resp.Body != nil {
 		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 	}
