@@ -1,100 +1,81 @@
 package crypt
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
+	"fmt"
 	"io"
+	"log"
 )
 
-// source here: https://gist.github.com/STGDanny/03acf29a90684c2afc9487152324e832
-
-/*
- *	FUNCTION		: encrypt
- *	DESCRIPTION		:
- *		This function takes a string and a cipher key and uses AES to encrypt the message
- *
- *	PARAMETERS		:
- *		byte[] key	: Byte array containing the cipher key
- *		string message	: String containing the message to encrypt
- *
- *	RETURNS			:
- *		string encoded	: String containing the encoded user input
- *		error err	: Error message
- */
-func AESEncryptToBase64(key []byte, message string) (encoded string, err error) {
-	//Create byte array from the input string
-	plainText := []byte(message)
-
-	//Create a new AES cipher using the key
+func AESEncrypt(key []byte, text []byte) (string, error) {
 	block, err := aes.NewCipher(key)
-
-	//IF NewCipher failed, exit:
 	if err != nil {
-		return
+		return "", err
 	}
 
-	//Make the cipher text a byte array of size BlockSize + the length of the message
-	cipherText := make([]byte, aes.BlockSize+len(plainText))
+	// Padding văn bản
+	text = pad(text)
+	log.Print(aes.BlockSize + len(text))
+	ciphertext := make([]byte, aes.BlockSize+len(text))
+	iv := ciphertext[:aes.BlockSize]
 
-	//iv is the ciphertext up to the blocksize (16)
-	iv := cipherText[:aes.BlockSize]
-	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
-		return
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return "", err
 	}
+	log.Print(string(iv))
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext[aes.BlockSize:], text)
 
-	//Encrypt the data:
-	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(cipherText[aes.BlockSize:], plainText)
-
-	//Return string encoded in base64
-	return base64.RawStdEncoding.EncodeToString(cipherText), err
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-/*
- *	FUNCTION		: decrypt
- *	DESCRIPTION		:
- *		This function takes a string and a key and uses AES to decrypt the string into plain text
- *
- *	PARAMETERS		:
- *		byte[] key	: Byte array containing the cipher key
- *		string secure	: String containing an encrypted message
- *
- *	RETURNS			:
- *		string decoded	: String containing the decrypted equivalent of secure
- *		error err	: Error message
- */
-func AESDecryptToBase64(key []byte, secure string) (decoded string, err error) {
-	//Remove base64 encoding:
-	cipherText, err := base64.RawStdEncoding.DecodeString(secure)
-
-	//IF DecodeString failed, exit:
+func AESDecrypt(key []byte, encryptedText string) ([]byte, error) {
+	ciphertext, err := base64.StdEncoding.DecodeString(encryptedText)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	//Create a new AES cipher with the key and encrypted message
 	block, err := aes.NewCipher(key)
-
-	//IF NewCipher failed, exit:
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	//IF the length of the cipherText is less than 16 Bytes:
-	if len(cipherText) < aes.BlockSize {
-		err = errors.New("Ciphertext block size is too short!")
-		return
+	if len(ciphertext) < aes.BlockSize {
+		return nil, fmt.Errorf("Ciphertext too short")
 	}
 
-	iv := cipherText[:aes.BlockSize]
-	cipherText = cipherText[aes.BlockSize:]
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
 
-	//Decrypt the message
-	stream := cipher.NewCFBDecrypter(block, iv)
-	stream.XORKeyStream(cipherText, cipherText)
+	log.Print(string(iv))
 
-	return string(cipherText), err
+	mode := cipher.NewCBCDecrypter(block, iv)
+	mode.CryptBlocks(ciphertext, ciphertext)
+
+	// Unpad văn bản
+	plaintext, err := unpad(ciphertext)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
+}
+
+func pad(text []byte) []byte {
+	padding := aes.BlockSize - len(text)%aes.BlockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(text, padtext...)
+}
+
+func unpad(text []byte) ([]byte, error) {
+	length := len(text)
+	unpadding := int(text[length-1])
+	if unpadding > length {
+		return nil, fmt.Errorf("Invalid padding")
+	}
+	return text[:(length - unpadding)], nil
 }

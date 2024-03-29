@@ -7,16 +7,16 @@ import (
 
 func TestEncrypt(t *testing.T) {
 	key := []byte("1234567890qwedavsfrtyjncvt67uuhs")
-	val := "tenguyen pro"
+	val := []byte("chao ban golang")
 
-	cirfer, _ := AESEncryptToBase64(key, val)
-	log.Printf("%s => %s\n", val, cirfer)
+	cirfer, err := AESEncrypt(key, val)
+	log.Printf("%s => %s\n %v", val, cirfer, err)
 }
 
 func TestDescrypt(t *testing.T) {
 	key := []byte("1234567890qwedavsfrtyjncvt67uuhs")
-	text := "eqJ8mMZXPCTWLD7ZkWlvqUmT1KKDwTlBwYYAzg"
+	text := "FYJQzdWuFT3V06EigANhyUjjiVADdNU6gegHI8KS5Uo="
 
-	bin, _ := AESDecryptToBase64(key, text)
+	bin, _ := AESDecrypt(key, text)
 	log.Printf("%s => %s\n", text, bin)
 }
