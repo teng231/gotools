@@ -29,7 +29,72 @@ func isTimeout(err error) bool {
 	return strings.Contains(err.Error(), "context deadline exceeded")
 }
 
-// New send request http
+type Response struct {
+	HttpCode int
+	Body     []byte
+	Header   http.Header
+}
+
+// Exec send request http
+func Exec(url string, opts ...Option) (*Response, error) {
+	newReq, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		// return -1, nil, err
+		return &Response{}, err
+	}
+
+	req := &Req{timeout: 10 * time.Second, Request: newReq}
+
+	for _, opt := range opts {
+		opt(req)
+	}
+	if req.transport == nil {
+		t := http.DefaultTransport.(*http.Transport).Clone()
+		t.MaxIdleConns = 100
+		t.MaxConnsPerHost = 100
+		t.MaxIdleConnsPerHost = 100
+		req.transport = t
+	}
+	client := &http.Client{Timeout: req.timeout, Transport: req.transport}
+	resp, err := client.Do(req.Request)
+	if err != nil {
+		if isTimeout(err) {
+			return &Response{}, ErrTimeout
+		}
+		return &Response{}, err
+	}
+	defer func() {
+		req.Close = true
+		resp.Body.Close()
+	}()
+	var reader io.ReadCloser
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, _ = gzip.NewReader(resp.Body)
+		defer reader.Close()
+	default:
+		reader = resp.Body
+	}
+
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return &Response{
+			HttpCode: resp.StatusCode,
+			Body:     data,
+			Header:   resp.Header,
+		}, err
+	}
+	return &Response{
+		HttpCode: resp.StatusCode,
+		Body:     data,
+		Header:   resp.Header,
+	}, nil
+}
+
+// Deprecated: New send http request
+// Now use httpclient.Exec(...)
+// Changed: 3 param to 2 param
+// httpcode (int), body ([]byte), ==> *Response{httpcode, body, header}
 func New(url string, opts ...Option) (int, []byte, error) {
 	newReq, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
