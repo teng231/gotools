@@ -35,6 +35,14 @@ type Response struct {
 	Header   http.Header
 }
 
+func (r Response) Bytes() []byte {
+	data, err := json.MarshalIndent(r, "", "")
+	if err != nil {
+		return nil
+	}
+	return data
+}
+
 // Exec send request http
 func Exec(url string, opts ...Option) (*Response, error) {
 	newReq, err := http.NewRequest(http.MethodGet, url, nil)
