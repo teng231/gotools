@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log"
 )
 
 func AESEncrypt(key []byte, text []byte) (string, error) {
