@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -268,4 +269,31 @@ func WithRetries(retryCount int) Option {
 		r.transport = transport
 	}
 
+}
+
+func WithPutBytes(data []byte) Option {
+	return func(r *Req) {
+		var rd io.Reader = bytes.NewBuffer(data)
+		rc, ok := rd.(io.ReadCloser)
+		if !ok && data != nil {
+			rc = io.NopCloser(rd)
+		}
+		r.Request.Body = rc
+	}
+}
+
+func WithPutFile(filepath string) Option {
+	return func(r *Req) {
+		data, err := os.ReadFile(filepath)
+		if err != nil {
+			log.Print("err:", err)
+			return
+		}
+		var rd io.Reader = bytes.NewBuffer(data)
+		rc, ok := rd.(io.ReadCloser)
+		if !ok && data != nil {
+			rc = io.NopCloser(rd)
+		}
+		r.Request.Body = rc
+	}
 }
