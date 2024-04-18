@@ -96,3 +96,18 @@ func TestPutRequest(t *testing.T) {
 
 	log.Print(code, string(body), err)
 }
+
+func TestWithURLEncode(t *testing.T) {
+	code, body, err := New("https://webhook.site/6933c857-1ab8-4469-a74e-57e16e8ee519",
+		WithMethod("POST"),
+		WithTimeout(10*time.Second),
+		WithHeader(map[string]string{
+			"content-type": "https://webhook.site/6933c857-1ab8-4469-a74e-57e16e8ee519",
+		}),
+		WithUrlEncode(map[string]string{
+			"mot": "1", "hai": "2",
+		}),
+	)
+
+	log.Print(code, string(body), err)
+}

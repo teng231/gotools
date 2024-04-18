@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -292,6 +293,27 @@ func WithPutFile(filepath string) Option {
 		var rd io.Reader = bytes.NewBuffer(data)
 		rc, ok := rd.(io.ReadCloser)
 		if !ok && data != nil {
+			rc = io.NopCloser(rd)
+		}
+		r.Request.Body = rc
+	}
+}
+
+func encodeParams(params map[string]string) string {
+	var encodedParams []string
+	for key, value := range params {
+		encodedKey := url.QueryEscape(key)
+		encodedValue := url.QueryEscape(value)
+		encodedParams = append(encodedParams, encodedKey+"="+encodedValue)
+	}
+	return strings.Join(encodedParams, "&")
+}
+
+func WithUrlEncode(params map[string]string) Option {
+	return func(r *Req) {
+		var rd io.Reader = bytes.NewBuffer([]byte(encodeParams(params)))
+		rc, ok := rd.(io.ReadCloser)
+		if !ok && params != nil {
 			rc = io.NopCloser(rd)
 		}
 		r.Request.Body = rc
