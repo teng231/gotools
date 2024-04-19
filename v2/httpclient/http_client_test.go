@@ -111,3 +111,16 @@ func TestWithURLEncode(t *testing.T) {
 
 	log.Print(code, string(body), err)
 }
+func TestPutRequest2(t *testing.T) {
+	resp, _ := Exec("https://image.lexica.art/full_webp/01707d2a-8b3f-4ac9-b679-b6ff97e7c360")
+	resp2, err := Exec("https://leia-storage-service-production.s3.us-east-1.amazonaws.com/timed/D001/95802150-215f-40f3-bc71-b00a4a72da61/e5e3d5a3-a35d-4c2f-9f9e-5324f5f402ec/c138ad49-6a50-4831-b5d6-b2a8f7d6a3d8/e8eefce0860d97b021739d3b7209ea22.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIASC7ECGJVHARKLZ6E%2F20240419%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240419T083548Z&X-Amz-Expires=86400&X-Amz-Signature=b744ab11d8665872cef139d5114038ad832929236654e969bea08e9da0d5810a&X-Amz-SignedHeaders=host&x-id=PutObject",
+		WithMethod("PUT"),
+		WithTimeout(15*time.Second),
+		WithHeader(map[string]string{
+			"content-type": "application/octet-stream",
+		}),
+		WithPutBytes(resp.Body),
+	)
+
+	log.Print(resp2.HttpCode, string(resp2.Body), err)
+}

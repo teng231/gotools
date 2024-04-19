@@ -159,6 +159,7 @@ func WithBody(body any) Option {
 		if !ok && body != nil {
 			rc = io.NopCloser(rd)
 		}
+		r.Request.ContentLength = int64(len(out))
 		r.Request.Body = rc
 	}
 }
@@ -279,6 +280,7 @@ func WithPutBytes(data []byte) Option {
 		if !ok && data != nil {
 			rc = io.NopCloser(rd)
 		}
+		r.Request.ContentLength = int64(len(data))
 		r.Request.Body = rc
 	}
 }
@@ -295,6 +297,7 @@ func WithPutFile(filepath string) Option {
 		if !ok && data != nil {
 			rc = io.NopCloser(rd)
 		}
+		r.Request.ContentLength = int64(len(data))
 		r.Request.Body = rc
 	}
 }
