@@ -5,8 +5,10 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -161,6 +163,9 @@ func WithBody(body any) Option {
 		}
 		r.Request.ContentLength = int64(len(out))
 		r.Request.Body = rc
+		r.Request.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(rd), nil
+		}
 	}
 }
 
@@ -282,6 +287,9 @@ func WithPutBytes(data []byte) Option {
 		}
 		r.Request.ContentLength = int64(len(data))
 		r.Request.Body = rc
+		r.Request.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(rd), nil
+		}
 	}
 }
 
@@ -299,6 +307,9 @@ func WithPutFile(filepath string) Option {
 		}
 		r.Request.ContentLength = int64(len(data))
 		r.Request.Body = rc
+		r.Request.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(rd), nil
+		}
 	}
 }
 
@@ -314,11 +325,44 @@ func encodeParams(params map[string]string) string {
 
 func WithUrlEncode(params map[string]string) Option {
 	return func(r *Req) {
-		var rd io.Reader = bytes.NewBuffer([]byte(encodeParams(params)))
+		urlEncodeData := []byte(encodeParams(params))
+		var rd io.Reader = bytes.NewBuffer(urlEncodeData)
 		rc, ok := rd.(io.ReadCloser)
 		if !ok && params != nil {
 			rc = io.NopCloser(rd)
 		}
 		r.Request.Body = rc
+		r.Request.ContentLength = int64(len(urlEncodeData))
+		r.Request.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(rd), nil
+		}
+	}
+}
+
+// WithFormData
+// NOTE: don't override content-type
+// NOTE: put WithFormData behide WithHeader to override header
+func WithFormData(message any) Option {
+	return func(r *Req) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		out, _ := json.Marshal(message)
+		outMsg := make(map[string]any)
+		json.Unmarshal(out, &outMsg)
+		for key, val := range outMsg {
+			_ = writer.WriteField(key, fmt.Sprintf("%v", val))
+		}
+		if err := writer.Close(); err != nil {
+			log.Print(err)
+			return
+		}
+		r.Request.Header.Set("content-type", writer.FormDataContentType())
+		r.Request.ContentLength = int64(body.Len())
+		r.Request.GetBody = func() (io.ReadCloser, error) {
+			r := bytes.NewReader(body.Bytes())
+			return io.NopCloser(r), nil
+		}
+		r.Request.Body = io.NopCloser(bytes.NewReader(body.Bytes()))
 	}
 }

@@ -7,10 +7,14 @@ import (
 	"time"
 )
 
+const (
+	urlWebhook = "https://webhook.site/ebd77346-9241-4289-a866-409166f88301"
+)
+
 func TestSendReq(t *testing.T) {
-	code, body, err := New("https://webhook.site/7dac37f5-a041-437b-a14f-0b0efbcf9515",
+	code, body, err := New(urlWebhook,
 		WithMethod("POST"),
-		WithTimeout(time.Second),
+		WithTimeout(2*time.Second),
 		WithBasicAuth("te", "manh"),
 		WithHeader(map[string]string{
 			"content-type": "application/json",
@@ -85,11 +89,11 @@ func TestSendReqWithTimeout(t *testing.T) {
 }
 
 func TestPutRequest(t *testing.T) {
-	code, body, err := New("https://webhook.site/6933c857-1ab8-4469-a74e-57e16e8ee519",
+	code, body, err := New(urlWebhook,
 		WithMethod("PUT"),
-		WithTimeout(10*time.Second),
+		WithTimeout(100*time.Second),
 		WithHeader(map[string]string{
-			"content-type": "https://webhook.site/6933c857-1ab8-4469-a74e-57e16e8ee519",
+			"content-type": "application/json",
 		}),
 		WithPutFile("../../README.MD"),
 	)
@@ -98,11 +102,11 @@ func TestPutRequest(t *testing.T) {
 }
 
 func TestWithURLEncode(t *testing.T) {
-	code, body, err := New("https://webhook.site/6933c857-1ab8-4469-a74e-57e16e8ee519",
+	code, body, err := New(urlWebhook,
 		WithMethod("POST"),
 		WithTimeout(10*time.Second),
 		WithHeader(map[string]string{
-			"content-type": "https://webhook.site/6933c857-1ab8-4469-a74e-57e16e8ee519",
+			"content-type": "application/json",
 		}),
 		WithUrlEncode(map[string]string{
 			"mot": "1", "hai": "2",
@@ -123,4 +127,16 @@ func TestPutRequest2(t *testing.T) {
 	)
 
 	log.Print(resp2.HttpCode, string(resp2.Body), err)
+}
+
+func TestWithFormData(t *testing.T) {
+	code, body, err := New(urlWebhook,
+		WithMethod("POST"),
+		WithTimeout(10*time.Second),
+		WithFormData(map[string]string{
+			"mot": "1", "hai": "2",
+		}),
+	)
+
+	log.Print(code, string(body), err)
 }
