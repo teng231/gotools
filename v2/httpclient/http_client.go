@@ -153,8 +153,13 @@ func New(url string, opts ...Option) (int, []byte, error) {
 	return resp.StatusCode, data, nil
 }
 
+// WithBody body can be nil
 func WithBody(body any) Option {
 	return func(r *Req) {
+		if body == nil {
+			r.Request.Body = nil
+			return
+		}
 		out, _ := json.Marshal(body)
 		var rd io.Reader = bytes.NewBuffer(out)
 		rc, ok := rd.(io.ReadCloser)
@@ -280,6 +285,10 @@ func WithRetries(retryCount int) Option {
 
 func WithPutBytes(data []byte) Option {
 	return func(r *Req) {
+		// if len(data) == 0 {
+		// 	r.Request.Body = nil
+		// 	return
+		// }
 		var rd io.Reader = bytes.NewBuffer(data)
 		rc, ok := rd.(io.ReadCloser)
 		if !ok && data != nil {
@@ -325,6 +334,10 @@ func encodeParams(params map[string]string) string {
 
 func WithUrlEncode(params map[string]string) Option {
 	return func(r *Req) {
+		// if len(params) == 0 {
+		// 	r.Request.Body = nil
+		// 	return
+		// }
 		urlEncodeData := []byte(encodeParams(params))
 		var rd io.Reader = bytes.NewBuffer(urlEncodeData)
 		rc, ok := rd.(io.ReadCloser)
@@ -346,7 +359,6 @@ func WithFormData(message any) Option {
 	return func(r *Req) {
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
-
 		out, _ := json.Marshal(message)
 		outMsg := make(map[string]any)
 		json.Unmarshal(out, &outMsg)

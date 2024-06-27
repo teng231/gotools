@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	urlWebhook = "https://webhook.site/ebd77346-9241-4289-a866-409166f88301"
+	urlWebhook = "https://webhook.site/2c65c12d-198f-41d2-bc83-a03f13bf0a40"
 )
 
 func TestSendReq(t *testing.T) {
@@ -136,6 +136,34 @@ func TestWithFormData(t *testing.T) {
 		WithFormData(map[string]string{
 			"mot": "1", "hai": "2",
 		}),
+	)
+
+	log.Print(code, string(body), err)
+}
+func TestWithWithNilBody(t *testing.T) {
+	code, body, err := New(urlWebhook,
+		WithMethod("POST"),
+		WithTimeout(10*time.Second),
+		WithBody(nil),
+	)
+
+	log.Print(code, string(body), err)
+}
+
+func TestWithWithNilPutContent(t *testing.T) {
+	code, body, err := New(urlWebhook,
+		WithMethod("PUT"),
+		WithTimeout(10*time.Second),
+		WithPutBytes(nil),
+	)
+
+	log.Print(code, string(body), err)
+}
+func TestWithWithNilEncoding(t *testing.T) {
+	code, body, err := New(urlWebhook,
+		WithMethod("POST"),
+		WithTimeout(10*time.Second),
+		WithUrlEncode(nil),
 	)
 
 	log.Print(code, string(body), err)
