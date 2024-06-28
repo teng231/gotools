@@ -153,24 +153,33 @@ func New(url string, opts ...Option) (int, []byte, error) {
 	return resp.StatusCode, data, nil
 }
 
-// WithBody body can be nil
-func WithBody(body any) Option {
+// WithBody data can be nil
+func WithBody(data any) Option {
 	return func(r *Req) {
-		if body == nil {
-			r.Request.Body = nil
-			return
-		}
-		out, _ := json.Marshal(body)
-		var rd io.Reader = bytes.NewBuffer(out)
+		bufData, _ := json.Marshal(data)
+		body := bytes.NewBuffer(bufData)
+		rd := io.Reader(body)
+
 		rc, ok := rd.(io.ReadCloser)
 		if !ok && body != nil {
 			rc = io.NopCloser(rd)
 		}
-		r.Request.ContentLength = int64(len(out))
 		r.Request.Body = rc
-		r.Request.GetBody = func() (io.ReadCloser, error) {
-			return io.NopCloser(rd), nil
+
+		if body != nil {
+			r.Request.ContentLength = int64(body.Len())
+			buf := body.Bytes()
+			r.Request.GetBody = func() (io.ReadCloser, error) {
+				_rd := bytes.NewReader(buf)
+				return io.NopCloser(_rd), nil
+			}
 		}
+
+		if r.Request.GetBody != nil && r.Request.ContentLength == 0 {
+			r.Request.Body = http.NoBody
+			r.Request.GetBody = func() (io.ReadCloser, error) { return http.NoBody, nil }
+		}
+
 	}
 }
 
@@ -251,7 +260,7 @@ func (t *retryableTransport) RoundTrip(req *http.Request) (*http.Response, error
 	// Retry logic
 	retries := 0
 	for shouldRetry(err, resp) && retries < t.retryCount {
-		log.Print("RUN Retry")
+		log.Print("RUN RETRY")
 		// Wait for the specified backoff period
 		time.Sleep(backoff(retries))
 		// We're going to retry, consume any response to reuse the connection.
@@ -283,21 +292,28 @@ func WithRetries(retryCount int) Option {
 
 }
 
-func WithPutBytes(data []byte) Option {
+func WithPutBytes(bufData []byte) Option {
 	return func(r *Req) {
-		// if len(data) == 0 {
-		// 	r.Request.Body = nil
-		// 	return
-		// }
-		var rd io.Reader = bytes.NewBuffer(data)
+		// var rd io.Reader = bytes.NewBuffer(data)
+		body := bytes.NewBuffer(bufData)
+		rd := io.Reader(body)
 		rc, ok := rd.(io.ReadCloser)
-		if !ok && data != nil {
+		if !ok && bufData != nil {
 			rc = io.NopCloser(rd)
 		}
-		r.Request.ContentLength = int64(len(data))
 		r.Request.Body = rc
-		r.Request.GetBody = func() (io.ReadCloser, error) {
-			return io.NopCloser(rd), nil
+		if body != nil {
+			r.Request.ContentLength = int64(body.Len())
+			buf := body.Bytes()
+			r.Request.GetBody = func() (io.ReadCloser, error) {
+				_rd := bytes.NewReader(buf)
+				return io.NopCloser(_rd), nil
+			}
+		}
+
+		if r.Request.GetBody != nil && r.Request.ContentLength == 0 {
+			r.Request.Body = http.NoBody
+			r.Request.GetBody = func() (io.ReadCloser, error) { return http.NoBody, nil }
 		}
 	}
 }
@@ -309,15 +325,28 @@ func WithPutFile(filepath string) Option {
 			log.Print("err:", err)
 			return
 		}
-		var rd io.Reader = bytes.NewBuffer(data)
+		var body = bytes.NewBuffer(data)
+		rd := io.Reader(body)
+
 		rc, ok := rd.(io.ReadCloser)
 		if !ok && data != nil {
 			rc = io.NopCloser(rd)
 		}
-		r.Request.ContentLength = int64(len(data))
+
 		r.Request.Body = rc
-		r.Request.GetBody = func() (io.ReadCloser, error) {
-			return io.NopCloser(rd), nil
+
+		if body != nil {
+			r.Request.ContentLength = int64(body.Len())
+			buf := body.Bytes()
+			r.Request.GetBody = func() (io.ReadCloser, error) {
+				_rd := bytes.NewReader(buf)
+				return io.NopCloser(_rd), nil
+			}
+		}
+
+		if r.Request.GetBody != nil && r.Request.ContentLength == 0 {
+			r.Request.Body = http.NoBody
+			r.Request.GetBody = func() (io.ReadCloser, error) { return http.NoBody, nil }
 		}
 	}
 }
@@ -334,20 +363,23 @@ func encodeParams(params map[string]string) string {
 
 func WithUrlEncode(params map[string]string) Option {
 	return func(r *Req) {
-		// if len(params) == 0 {
-		// 	r.Request.Body = nil
-		// 	return
-		// }
 		urlEncodeData := []byte(encodeParams(params))
-		var rd io.Reader = bytes.NewBuffer(urlEncodeData)
+		body := bytes.NewBuffer(urlEncodeData)
+		rd := io.Reader(body)
 		rc, ok := rd.(io.ReadCloser)
+
 		if !ok && params != nil {
 			rc = io.NopCloser(rd)
 		}
 		r.Request.Body = rc
-		r.Request.ContentLength = int64(len(urlEncodeData))
-		r.Request.GetBody = func() (io.ReadCloser, error) {
-			return io.NopCloser(rd), nil
+
+		if body != nil {
+			r.Request.ContentLength = int64(body.Len())
+			buf := body.Bytes()
+			r.Request.GetBody = func() (io.ReadCloser, error) {
+				_rd := bytes.NewReader(buf)
+				return io.NopCloser(_rd), nil
+			}
 		}
 	}
 }

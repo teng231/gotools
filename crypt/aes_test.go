@@ -15,7 +15,15 @@ func TestEncrypt(t *testing.T) {
 
 func TestDescrypt(t *testing.T) {
 	key := []byte("mpDYXe9lnez8xeAAU3Op5V5mwn1bpHoo")
-	text := "W72bkVHEGfHc2FQVZl2WjTJ2e3dIixBQAYRYVtyV3jQIPJDDLhcl2XasJskk82mn+vTXX2JqSJf5cUInu0qXTvO/EU9UU46sJvvb0/3g4TMmlW4OPVPYi74R+5Pk8Et29iO1FOGnch1TjmHjxVa5yRB/pliCjJXCPnfB5JTK/4T5NePwaULZG2CVS89a0XvdyXi95CCrv0bYe878nypoYSA9OJeSGyUASq2pF9Gf5wLB7eM/9qgGpqpguvd21G92ifYrloMSwKgGpuWvGaYfO1WE1bR6eFtoJ/TdeOehasaoPVkiqEch5vesdxSgqEmNEw97M3vT5MkQEfGTJRTf9w=="
+	text := "SF3CXm++mlQyjB723QYWIWoaxJJRsNxvgSR8L3lB6L39hOedQwrZWLlYSj8hcWV9mZCKwqUmMPKIxNN9FWGrSwMNof9B9iMFCW8ONneeUwGeq2rkdwpA47vPgXdq+UQ53sTsPDnhuUyJhaxDuk/y0INiHX1m+XlklPlhYALN7WoYehV84zb/twA5FbLBh+y7ZQMp3V270nigaVWL6wXEMb09FWGGjCyIXr7WXGeZovPykSNCVnX5WRPWWCHGFvbKaGbmJyEx6j9ZuTX8QmfYcgJvlWU+P0Ffjs356A4M8L911CIdE4JpYqfMc616yS6mOKWrajf9j+uAhF60eaIJN/34lNXISXoACuML+fprR4Aic30aDOoPc95hHdPWKFWZWXda3fgYz3R/UvaHe/J7+GcnND/Njw2FGW740F6OQ5OOgEOQykpX0ECyoxoMUQon"
+
+	bin, _ := AESDecrypt(key, text)
+	log.Printf("%s => %s\n", text, bin)
+}
+
+func TestDescryptDev(t *testing.T) {
+	key := []byte("6BgaZKcY6jj1vrwFUCmzzQP3uDdCPcxB")
+	text := "IhpwMeETLCJwSl11WjnFhMJIAeYdf/7L18qBM6go7twHxIKAqTwbFrIvfMDYFxPLECTyH0MYTEIr0t3Bkc1uEUnycIW0vyiI+Uuzp52CcdEnTi9b0oBJJzGjThX2mAI2YEyTRj6N8tyL+brOewenT80dore+DTflvSGjzB+nZjaO1Sx5kH4IYFoj6UkVNCDrX8F5Z4mK3aaUnk5hUgbBxH8hmTtddtB0Te9pG7oz9YPGllIv6R3JgqgXY4xR1rqP4y0RZfuUE9EU/leBYE97MsVzpqsESnzqiZEassvWjBfc7D/4EikwCOl2jyBIjnbD"
 
 	bin, _ := AESDecrypt(key, text)
 	log.Printf("%s => %s\n", text, bin)
